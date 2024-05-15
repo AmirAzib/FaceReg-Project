@@ -1,7 +1,14 @@
+import os.path
+import datetime
+import pickle
+
+import subprocess
 import tkinter as tk
 import cv2
-import util
 from PIL import Image, ImageTk
+import face_recognition
+
+import util
 
 class App:
     def __init__(self): 
@@ -20,6 +27,12 @@ class App:
 
         self.add_webcam(self.webcam_label)
 
+        self.db_dir = './db'
+        if not os.path.exists(self.db_dir):
+            os.mkdir(self.db_dir)
+
+        self.log_path = './log.txt'
+
     def add_webcam(self,label):
         if 'cap' not in self.__dict__:
             self.cap = cv2.VideoCapture(0)
@@ -31,22 +44,35 @@ class App:
         ret, frame = self.cap.read() #read a frame from webcam
 
         self.most_recent_capture_arr = frame 
-
         img_ = cv2.cvtColor(self.most_recent_capture_arr, cv2.COLOR_BGR2RGB) #convert the frame into the format we need in order to put it into a label
-
         self.most_recent_capture_pil = Image.fromarray(img_)
-
         imgtk = ImageTk.PhotoImage(image=self.most_recent_capture_pil)
-
         self._label.imgtk = imgtk
         self._label.configure(image=imgtk) #put the frame into the label
-
+        
         self._label.after(20, self.process_webcam) #repeat the same process every 20ms
 
 
-
     def login(self):
-        pass
+
+        unknown_img_path = './.tmp.jpg'
+
+        cv2.imwrite(unknown_img_path, self.most_recent_capture_arr)
+
+        output = str(subprocess.check_output( ['face_recognition', self.db_dir, unknown_img_path ]))
+        name=output.split(',')[1][:-5]
+
+        if name in ['unknown_person', 'no_persons_found']:
+            util.msg_box('Oops..', 'unknown user detected, please register or try again')
+        else: 
+            util.msg_box('Welcome back!', f'Hi, {name}')
+            with open(self.log_path, 'a') as f:
+                f.write("{},{}\n".format(name, datetime.datetime.now()))
+                f.close()
+
+        os.remove(unknown_img_path)
+
+        
 
     def register_new_user(self):
         self.register_new_user_window = tk.Toplevel(self.main_window)
@@ -55,7 +81,7 @@ class App:
         self.accept_button_register_new_user_window = util.get_button(self.register_new_user_window, 'accept', 'green', self.accept_register_new_user)
         self.accept_button_register_new_user_window.place(x=750, y=300)
 
-        self.try_again_button_register_new_user_window = util.get_button(self.register_new_user_window, 'try again', 'red', self.accept_register_new_user)
+        self.try_again_button_register_new_user_window = util.get_button(self.register_new_user_window, 'try again', 'red', self.try_again_register_new_user)
         self.try_again_button_register_new_user_window.place(x=750, y=400)
 
         self.capture_label = util.get_img_label(self.register_new_user_window)
@@ -64,15 +90,44 @@ class App:
 
         self.add_img_to_label(self.capture_label)
 
+        self.entry_text_register_new_user = util.get_entry_text(self.register_new_user_window)
+        self.entry_text_register_new_user.place(x=750, y=150)
 
-    def accept_register_new_user(self):
-        pass
+        self.text_label_register_new_user = util.get_text_label(self.register_new_user_window,"please \ninput username:")
+        self.text_label_register_new_user.place(x=750, y=70)
 
-    def add_img_to_label(self):
-        pass
-        
+
+    def try_again_register_new_user(self):
+        self.register_new_user_window.destroy()
+
+
+    def add_img_to_label(self, label):
+        imgtk = ImageTk.PhotoImage(image=self.most_recent_capture_pil)
+        label.imgtk = imgtk
+        label.configure(image=imgtk)
+
+        self.register_new_user_capture = self.most_recent_capture_arr.copy()   #capture an image to save
+
     def start(self):
         self.main_window.mainloop()
+
+    def accept_register_new_user(self):
+
+        name = self.entry_text_register_new_user.get(1.0, "end-1c")  #retrieve the information the user has input into the text field for their username
+        bgr_image = cv2.cvtColor(self.register_new_user_capture, cv2.COLOR_RGB2BGR) #change the format into a saveable format (BGR)
+        cv2.imwrite(os.path.join(self.db_dir, f'{name}.jpg'), bgr_image) #saving the image we have took when registering to db folder
+
+        success = cv2.imwrite(os.path.join(self.db_dir, f'{name}.jpg'), self.register_new_user_capture) 
+
+        if success:   
+                util.msg_box('success', 'user was registered successfully')
+        else:
+                util.msg_box('error', 'Failed to save image')
+
+
+        self.register_new_user_window.destroy()
+
+
 
 if __name__ == "__main__":
   app = App()

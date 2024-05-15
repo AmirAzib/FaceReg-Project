@@ -1,5 +1,8 @@
 import tkinter as tk
 from tkinter import messagebox
+import os
+import pickle
+import face_recognition
 
 def get_button(window, text, color, command, fg='white'):
     button = tk.Button(
@@ -22,11 +25,11 @@ def get_img_label(window):
     return label
 
 def get_text_label(window, text):
-    label=tk.Lebel (window, text=text)
+    label = tk.Label (window, text=text)
     label.config(font=("sans-serif",21), justify="left")
     return label
 
-def get_entry_test(window):
+def get_entry_text(window):
     inputtxt = tk.Text(window,
                        height=2,
                        width=15,
