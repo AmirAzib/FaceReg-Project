@@ -55,12 +55,8 @@ class App:
 
     def login(self):
 
-        unknown_img_path = './.tmp.jpg'
-
-        cv2.imwrite(unknown_img_path, self.most_recent_capture_arr)
-
-        output = str(subprocess.check_output( ['face_recognition', self.db_dir, unknown_img_path ]))
-        name=output.split(',')[1][:-5]
+       
+        name=util.recognize(self.most_recent_capture_arr, self.db_dir)
 
         if name in ['unknown_person', 'no_persons_found']:
             util.msg_box('Oops..', 'unknown user detected, please register or try again')
@@ -69,9 +65,6 @@ class App:
             with open(self.log_path, 'a') as f:
                 f.write("{},{}\n".format(name, datetime.datetime.now()))
                 f.close()
-
-        os.remove(unknown_img_path)
-
         
 
     def register_new_user(self):
@@ -114,15 +107,13 @@ class App:
     def accept_register_new_user(self):
 
         name = self.entry_text_register_new_user.get(1.0, "end-1c")  #retrieve the information the user has input into the text field for their username
-        bgr_image = cv2.cvtColor(self.register_new_user_capture, cv2.COLOR_RGB2BGR) #change the format into a saveable format (BGR)
-        cv2.imwrite(os.path.join(self.db_dir, f'{name}.jpg'), bgr_image) #saving the image we have took when registering to db folder
 
-        success = cv2.imwrite(os.path.join(self.db_dir, f'{name}.jpg'), self.register_new_user_capture) 
+        embeddings = face_recognition.face_encodings(self.register_new_user_capture)[0]
 
-        if success:   
-                util.msg_box('success', 'user was registered successfully')
-        else:
-                util.msg_box('error', 'Failed to save image')
+        file = open(os.path.join(self.db_dir, '{}.pickle'.format(name)), 'wb')
+        pickle.dump(embeddings, file)
+        
+        util.msg_box('Success!', 'User was registered successfully !')
 
 
         self.register_new_user_window.destroy()
