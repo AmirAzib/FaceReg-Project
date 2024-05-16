@@ -1,3 +1,25 @@
+# face-attendance-system
+
+Face attendance system using face recognition with Python !
+
+## Face attendance software
+
+<p align="center">
+<a href="https://www.youtube.com/watch?v=z_dbnYHAQYg">
+    <img width="600" src="https://utils-computervisiondeveloper.s3.amazonaws.com/thumbnails/with_play_button/face_attendance.jpg" alt="Watch the video">
+    </br>Watch on YouTube: Face attendance system with Python and face recognition !
+</a>
+</p>
+
+## Spoofing feature
+
+<p align="center">
+<a href="https://www.youtube.com/watch?v=_KvtVk8Gk1A">
+    <img width="600" src="https://utils-computervisiondeveloper.s3.amazonaws.com/thumbnails/with_play_button/face_attendance_spoofing.jpg" alt="Watch the video">
+    </br>Watch on YouTube: Face attendance system with liveness detection !
+</a>
+</p>
+
 ## execution
 
 - Python 3.8
