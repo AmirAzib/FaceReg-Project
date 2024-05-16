@@ -1,12 +1,14 @@
 import os.path
 import datetime
 import pickle
-
-import subprocess
+import sys
+sys.path.insert(1, 'anti-spoofing')
+from test import test
 import tkinter as tk
 import cv2
 from PIL import Image, ImageTk
 import face_recognition
+
 
 import util
 
@@ -16,12 +18,15 @@ class App:
         self.main_window.geometry("1200x520+350+100")
 
         self.login_button_main_window = util.get_button(self.main_window, 'login', 'blue', self.login)
-        self.login_button_main_window.place(x=750, y=300)
+        self.login_button_main_window.place(x=750, y=200)
 
+        self.logout_button_main_window = util.get_button(self.main_window, 'logout', 'red', self.logout)
+        self.logout_button_main_window.place(x=750, y=300)
+        
         self.register_new_user_button_main_window = util.get_button(self.main_window, 'register new user', 
                                                                     'gray', self.register_new_user, fg='black')
         self.register_new_user_button_main_window.place(x=750, y=400)
-
+        
         self.webcam_label = util.get_img_label(self.main_window)
         self.webcam_label.place(x=10, y=0, width=700, height=500)
 
@@ -55,17 +60,46 @@ class App:
 
     def login(self):
 
-       
-        name=util.recognize(self.most_recent_capture_arr, self.db_dir)
 
-        if name in ['unknown_person', 'no_persons_found']:
-            util.msg_box('Oops..', 'unknown user detected, please register or try again')
-        else: 
-            util.msg_box('Welcome back!', f'Hi, {name}')
-            with open(self.log_path, 'a') as f:
-                f.write("{},{}\n".format(name, datetime.datetime.now()))
-                f.close()
+        label = test(
+                image= self.most_recent_capture_arr,
+                model_dir= '/Users/aziba/OneDrive/Bureau/FaceReg Project/anti-spoofing/resources/anti_spoof_models',
+                device_id= 0
+                )
         
+        if label == 1: 
+
+            name=util.recognize(self.most_recent_capture_arr, self.db_dir)
+
+            if name in ['unknown_person', 'no_persons_found']:
+                util.msg_box('Oops..', 'unknown user detected, please register or try again')
+            else: 
+                util.msg_box('Welcome back!', f'Hi, {name}')
+                with open(self.log_path, 'a') as f:
+                    f.write('{},{},in\n'.format(name, datetime.datetime.now()))
+                    f.close()
+        else: 
+            util.msg_box('Hey, you are a spoofer!','This is a fake person!')
+
+    def logout(self):
+
+        label = test(
+                image=self.most_recent_capture_arr,
+                model_dir='/Users/aziba/OneDrive/Bureau/FaceReg Project/anti-spoofing/resources/anti_spoof_models',
+                device_id=0
+                )
+        if label ==1: 
+            name = util.recognize(self.most_recent_capture_arr, self.db_dir)
+
+            if name in ['unknown_person', 'no_persons_found']:
+                util.msg_box('Ups...', 'Unknown user. Please register new user or try again.')
+            else:
+                util.msg_box('Logged out successfully !', 'Goodbye, {}.'.format(name))
+                with open(self.log_path, 'a') as f:
+                    f.write('{},{},out\n'.format(name, datetime.datetime.now()))
+                    f.close()
+        else: 
+            util.msg_box('Hey, you are a spoofer!','This is a fake person!')
 
     def register_new_user(self):
         self.register_new_user_window = tk.Toplevel(self.main_window)
