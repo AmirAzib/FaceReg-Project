@@ -98,6 +98,8 @@ class App:
                 with open(self.log_path, 'a') as f:
                     f.write('{},{},out\n'.format(name, datetime.datetime.now()))
                     f.close()
+                self.main_window.destroy()
+
         else: 
             util.msg_box('Hey, you are a spoofer!','This is a fake person!')
 
